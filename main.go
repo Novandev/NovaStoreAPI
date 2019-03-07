@@ -37,6 +37,12 @@ _, authErr = fmt.Printf(format, accessKey, secretKey)
 if authErr != nil {
 log.Fatal(authErr.Error())
 }
+
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
 	e := echo.New()
 	//e.POST("/files", saveFile)
 	//e.GET("/files/:id", getFile)
@@ -47,6 +53,6 @@ log.Fatal(authErr.Error())
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
-	e.Logger.Fatal(e.Start(":"))
+	e.Logger.Fatal(e.Start(":"+port))
 
 }
