@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"go.mongodb.org/mongo-driver/mongo"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
@@ -23,15 +22,23 @@ type User struct {
 
 //noinspection ALL
 func main(){
+
+// DB section
+
+
+db.AutoMigrate(&User{})
+
+
+
 authErr := godotenv.Load()
 if authErr != nil {
 log.Fatal("Error loading .env file")
 }
-	//db, err := gorm.Open("sqlite3", "test.db")
-	//if err != nil {
-	//	panic("failed to connect database")
-	//}
-	//defer db.Close()
+	db, err := gorm.Open("sqlite3", "test.db")
+	if err != nil {
+		panic("failed to connect database")
+	}
+	defer db.Close()
 
 accessKey := os.Getenv("ACCESS")
 secretKey := os.Getenv("SECRET")
