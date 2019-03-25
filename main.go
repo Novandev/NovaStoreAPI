@@ -1,139 +1,129 @@
 package main
 
 import (
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/jinzhu/gorm"
+	"context"
 	"github.com/joho/godotenv"
-	"github.com/labstack/echo"
+	"github.com/kataras/iris"
+	"github.com/kataras/iris/middleware/logger"
+	"github.com/kataras/iris/middleware/recover"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/mgo.v2/bson"
 	"log"
-	"net/http"
 	"os"
+	"time"
+	"fmt"
+	//"strings"
 )
 
 
-type User struct {
-	gorm.Model
-	Username string
-	Password string
-}
+
+
+
+
+
 
 //noinspection ALL
 func main(){
 
-// DB section
-
-
-db.AutoMigrate(&User{})
-
-
-
-authErr := godotenv.Load()
-if authErr != nil {
-log.Fatal("Error loading .env file")
-}
-	db, err := gorm.Open("sqlite3", "test.db")
+	err := godotenv.Load()
 	if err != nil {
-		panic("failed to connect database")
+		log.Fatal("Error loading .env file")
 	}
-	defer db.Close()
+// DB section
+//mongoDbUname := os.Getenv("MLABSUSERNAME")
+//mongoDbPassword := os.Getenv("MLABSPASSWORD")
+//mongoDBUri := fmt.Sprintf("mongodb://novandev:Dad8e3cc@ds251197.mlab.com:51197/heroku_g6wjttm1",mongoDbUname,mongoDbPassword)
+dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
+client, err := mongo.Connect(dbCtx, options.Client().ApplyURI(""))
 
-accessKey := os.Getenv("ACCESS")
-secretKey := os.Getenv("SECRET")
-format := "\nAccess: %s\nSecret: %s\n"
+UserCollection := client.Database("heroku_g6wjttm1").Collection("Users")
 
-_, authErr = fmt.Printf(format, accessKey, secretKey)
-if authErr != nil {
-log.Fatal(authErr.Error())
+if err != nil {
+	log.Fatal("Cannot connect to MLABS")
 }
+
+
+//accessKey := os.Getenv("ACCESS")
+//secretKey := os.Getenv("SECRET")
+
+
+
+
+//format := "\nAccess: %s\nSecret: %s\n"
+//_, authErr = fmt.Printf(format, accessKey, secretKey)
+//if authErr != nil {
+//log.Fatal(authErr.Error())
+//}
 
 	port := os.Getenv("PORT")
 
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}
-	e := echo.New()
+
 
 // AWS Section
 
 
 	// Open an AWS session in order to get access to buckets
-	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-east-1")})
-	uploader := s3manager.NewUploader(sess)
+	//sess, err := session.NewSession(&aws.Config{Region: aws.String("us-east-1")})
+	//uploader := s3manager.NewUploader(sess)
 
 
+	app := iris.Default()
+	app.Logger().SetLevel("debug")
+	// Recover from panics and log the panic message to the application's logger ("Warn" level).
+	app.Use(recover.New())
+	// logs HTTP requests to the application's logger ("Info" level)
+	app.Use(logger.New())
 
-	//
-	//// Echo fucntion sections
-	//func getFile(c echo.Context) error {
-	//
-	//	// User ID from path `users/:id`
-	//	userId := c.Param("id")
-	//	// file name from
-	//	file := c.Param("File")
-	//
-	//	f, err  := os.Open(file)
-	//	if err != nil {
-	//	return fmt.Errorf("failed to open file %q, %v", filename, err)
-	//}
-	//
-	//	return c.String(http.StatusOK, f)
-	//}
-	//
-	//
-	//
-	//
-	//func getAllFiles(c echo.Context) error {
-	//	// User ID from path `users/:id`
-	//	userId := c.Param("id")
-	//	return c.String(http.StatusOK, id)
-	//}
-	//
-	//
-	//
-	//func saveFile(c echo.Context) error {
-	//	// Get name
-	//	userId := c.FormValue("userId")
-	//	// Get avatar
-	//	CSV, err := c.FormFile("CSV")
-	//	if err != nil {
-	//	return err
-	//}
-	//
-	//	// Source
-	//	src, err := avatar.Open()
-	//	if err != nil {
-	//	return err
-	//}
-	//	defer src.Close()
-	//
-	//	// Destination
-	//	dst, err := os.Create(avatar.Filename)
-	//	if err != nil {
-	//	return err
-	//}
-	//	defer dst.Close()
-	//
-	//	// Copy
-	//	if _, err = io.Copy(dst, src); err != nil {
-	//	return err
-	//}
-	//
-	//	return c.HTML(http.StatusOK, "<b>Thank you! " + name + "</b>")
-	//}
-	//
-	//e.POST("user/:id/files", saveFile)
-	//e.GET("user/:id/files/:id", getFile)
-	//e.GET("user/:id/files/all", getAllFiles)
-	//e.DELETE("user/:id/files/:id", deleteFile)
-	//e.POST("/sign-up", newUser)
-	//e.POST("/sign-in", signinUser)
-
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+	app.Get("/", func(context iris.Context) {
+		context.WriteString("NovaStore")
 	})
-	e.Logger.Fatal(e.Start(":"+port))
+	app.Post("/register",func(ctx iris.Context) {
+		var u User
+		err := ctx.ReadJSON(&u)
+		if err != nil {
+			ctx.WriteString(err.Error())
+			ctx.StatusCode(iris.StatusBadRequest)
+			panic(err)
+			return
+		}
+		res, resErr := UserCollection.InsertOne(dbCtx, bson.M{"email": u.Email, "password": u.Password})
+		if resErr != nil {
+			panic(resErr)
+			ctx.WriteString(err.Error())
+			ctx.StatusCode(iris.StatusBadRequest)
 
+			return
+		}
+		//ctx.Application().Logger().Infof("received %#+v", u.Email)
+		//ctx.Application().Logger().Infof("received %#+v", id)
+		str := fmt.Sprint(res.InsertedID)
+		fmt.Println(res.InsertedID)
+		n := map[string]string{"status": "200 ok", "UserID":str }
+		ctx.JSON(n)
+	})
+	app.Post("/login",func(ctx iris.Context) {
+		//var u User
+		//err := ctx.ReadJSON(&u)
+		//if err != nil {
+		//	ctx.WriteString(err.Error())
+		//	ctx.StatusCode(iris.StatusBadRequest)
+		//	return
+		//}
+		//res, err := UserCollection.InsertOne(dbCtx, bson.M{"email": u.Email, "password": u.Password})
+		//ctx.Application().Logger().Infof("received %#+v", u)
+	})
+
+	app.Run(iris.Addr(":"+port))
 }
+
+type (
+	User struct {
+		Email  string `json:"email"`
+		Password string `json:"password"`
+	}
+
+)
