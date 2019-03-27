@@ -32,7 +32,6 @@ func main(){
 // DB section
 //mongoDbUname := os.Getenv("MLABSUSERNAME")
 //mongoDbPassword := os.Getenv("MLABSPASSWORD")
-//mongoDBUri := fmt.Sprintf("mongodb://novandev:Dad8e3cc@ds251197.mlab.com:51197/heroku_g6wjttm1",mongoDbUname,mongoDbPassword)
 dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
 client, err := mongo.Connect(dbCtx, options.Client().ApplyURI(""))
 
