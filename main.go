@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"time"
-	"fmt"
 	//"strings"
 )
 
@@ -90,7 +89,10 @@ if err != nil {
 			panic(err)
 			return
 		}
-		res, resErr := UserCollection.InsertOne(dbCtx, bson.M{"email": u.Email, "password": u.Password})
+		// give the comment a unique ID and set the time
+		u.ID = bson.NewObjectId()
+		u.CreatedAt = time.Now()
+		_, resErr := UserCollection.InsertOne(dbCtx,u)
 		if resErr != nil {
 			panic(resErr)
 			ctx.WriteString(err.Error())
@@ -100,10 +102,8 @@ if err != nil {
 		}
 		//ctx.Application().Logger().Infof("received %#+v", u.Email)
 		//ctx.Application().Logger().Infof("received %#+v", id)
-		str := fmt.Sprint(res.InsertedID)
-		fmt.Println(res.InsertedID)
-		n := map[string]string{"status": "200 ok", "UserID":str }
-		ctx.JSON(n)
+		response := map[string]string{"status": "200", "UserID":u.ID.Hex() }
+		ctx.JSON(response)
 	})
 	app.Post("/login",func(ctx iris.Context) {
 		//var u User
@@ -122,8 +122,10 @@ if err != nil {
 
 type (
 	User struct {
+		ID     bson.ObjectId `json:"id" bson:"_id,omitempty"`
 		Email  string `json:"email"`
 		Password string `json:"password"`
+		CreatedAt time.Time `json:"CreatedAt"`
 	}
 
 )
