@@ -21,10 +21,10 @@ import (
 //noinspection ALL
 func main() {
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	// DB section
 	mblabsUri := os.Getenv("MONGOATLAS")
 	fmt.Println(mblabsUri)
