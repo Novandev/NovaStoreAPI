@@ -1,1 +1,1 @@
-web: NovastoreAPI
+web: go run main.go
