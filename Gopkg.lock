@@ -58,12 +58,12 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:434aab943cc1c082c9df36bd4b1f107d9ef4af930d2ce13d3f2eb008df9196f0"
+  branch = "master"
+  digest = "1:5aebd8922bf42f80be063b008fd3e13fab0c1d5a2456d4534db9a320f3a7e6bf"
   name = "github.com/flosch/pongo2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5e81b817a0c48c1c57cdf1a9056cf76bdee02ca9"
-  version = "v3.0"
+  revision = "79872a7b27692599b259dc751bed8b03581dd0de"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -120,6 +120,14 @@
   pruneopts = "UT"
   revision = "0ff49de124c6f76f8494e194af75bde0f1a49a29"
   version = "v1.1.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:60835a4fa946b3c4b595438a07d447305ed4fc9ce95a7a5d0c06ffeea490d5a9"
+  name = "github.com/juju/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e65537c515d77e35697c471d6c2755375cb3adc4"
 
 [[projects]]
   branch = "master"

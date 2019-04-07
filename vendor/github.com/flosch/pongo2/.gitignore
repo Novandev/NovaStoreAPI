@@ -7,6 +7,7 @@
 _obj
 _test
 .idea
+.vscode
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -38,3 +39,4 @@ tpl-error.out
 /profile
 /coverage.out
 /pongo2_internal_test.ignore
+go.sum

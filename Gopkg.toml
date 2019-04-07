@@ -24,10 +24,17 @@
 #   go-tests = true
 #   unused-packages = true
 
+[metadata.heroku]
+  root-package = "novastoreAPI"
+  install = [ "./..." ]
 
 [[constraint]]
   branch = "master"
   name = "github.com/joho/godotenv"
+[[override]]
+  name = "github.com/flosch/pongo2"
+  branch = "master"
+
 
 [[constraint]]
   branch = "master"
@@ -44,6 +51,3 @@
 [prune]
   go-tests = true
   unused-packages = true
-[metadata.heroku]
-  root-package = "novastoreAPI"
-  install = [ "./..." ]
