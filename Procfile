@@ -1,1 +1,1 @@
-web: bin/NovastoreAPI
+web: NovastoreAPI
