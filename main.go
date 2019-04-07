@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
@@ -26,7 +27,7 @@ func main() {
 	}
 	// DB section
 	mblabsUri := os.Getenv("MONGOATLAS")
-	// fmt.Println(mblabsUri)
+	fmt.Println(mblabsUri)
 	//mongoDbUname := os.Getenv("MLABSUSERNAME")
 	//mongoDbPassword := os.Getenv("MLABSPASSWORD")
 	dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
