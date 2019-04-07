@@ -46,5 +46,4 @@
   unused-packages = true
 [metadata.heroku]
   root-package = "github.com/Novandev/novastoreAPI"
-  go-version = "go1.12.1"
   install = [ "./..." ]
