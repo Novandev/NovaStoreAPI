@@ -11,7 +11,7 @@
 // writing to and reading from a connection to wireops.Op's. This package also provides types for
 // listening for and accepting Connections, as well as some types for handling connections and
 // proxying connections to another server.
-package connection // import "go.mongodb.org/mongo-driver/x/network/connection"
+package connection
 
 import (
 	"context"

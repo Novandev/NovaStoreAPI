@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -94,15 +95,16 @@ func main() {
 		ctx.JSON(response)
 	})
 	app.Post("/login", func(ctx iris.Context) {
-		//var u User
-		//err := ctx.ReadJSON(&u)
-		//if err != nil {
-		//	ctx.WriteString(err.Error())
-		//	ctx.StatusCode(iris.StatusBadRequest)
-		//	return
-		//}
-		//res, err := UserCollection.InsertOne(dbCtx, bson.M{"email": u.Email, "password": u.Password})
-		//ctx.Application().Logger().Infof("received %#+v", u)
+		var u User
+		err := ctx.ReadJSON(&u)
+		if err != nil {
+			ctx.WriteString(err.Error())
+			ctx.StatusCode(iris.StatusBadRequest)
+			return
+		}
+		res, err := UserCollection.Find(dbCtx, bson.M{"email": u.Email, "password": u.Password})
+		// ctx.Application().Logger().Infof("received %#+v", res)
+		fmt.Println(res)
 	})
 
 	app.Run(iris.Addr(":" + port))
