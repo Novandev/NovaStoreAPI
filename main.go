@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/kataras/iris"
@@ -27,7 +31,8 @@ func main() {
 	// }
 	// DB section
 	mblabsUri := os.Getenv("MONGOATLAS")
-	fmt.Println(mblabsUri)
+	bucket := os.Getenv("BUCKET")
+	// fmt.Println(mblabsUri)
 	//mongoDbUname := os.Getenv("MLABSUSERNAME")
 	//mongoDbPassword := os.Getenv("MLABSPASSWORD")
 	dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
@@ -57,8 +62,13 @@ func main() {
 	// AWS Section
 
 	// Open an AWS session in order to get access to buckets
-	//sess, err := session.NewSession(&aws.Config{Region: aws.String("us-east-1")})
-	//uploader := s3manager.NewUploader(sess)
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1"),
+	})
+	if err != nil {
+		log.Fatal(err.Error)
+	}
+	uploader := s3manager.NewUploader(sess)
 
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
@@ -95,6 +105,33 @@ func main() {
 		response := map[string]string{"status": "200", "Email Registered": u.Email}
 		ctx.JSON(response)
 	})
+
+	app.Post("/upload", func(ctx iris.Context) {
+		fmt.Println("hit")
+		file, _, err := ctx.FormFile("file")
+		if err != nil {
+			ctx.StatusCode(iris.StatusInternalServerError)
+			ctx.HTML("Error while uploading: <b>" + err.Error() + "</b>")
+			return
+		}
+		_, err = uploader.Upload(&s3manager.UploadInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String("test"),
+			Body:   file,
+		})
+		if err != nil {
+			// Print the error and exit.
+			fmt.Println("Unable to upload to bucket %q , %v", bucket, err)
+		}
+
+		fmt.Printf("Successfully uploaded to %q\n", bucket)
+
+		defer file.Close()
+		fmt.Println(reflect.TypeOf(file))
+		// fmt.Println(info)
+		// defer out.Close()
+	})
+
 	app.Post("/login", func(ctx iris.Context) {
 		var u User
 		err := ctx.ReadJSON(&u)
@@ -104,7 +141,11 @@ func main() {
 			return
 		}
 		res, err := UserCollection.Find(dbCtx, bson.M{"email": u.Email, "password": u.Password})
-		// ctx.Application().Logger().Infof("received %#+v", res)
+		if err != nil {
+			ctx.WriteString(err.Error())
+			ctx.StatusCode(iris.StatusBadRequest)
+			return
+		}
 		fmt.Println(res)
 	})
 
