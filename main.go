@@ -108,21 +108,22 @@ func main() {
 
 	app.Post("/upload", func(ctx iris.Context) {
 		fmt.Println("hit")
-		file, _, err := ctx.FormFile("file")
+		file, info, err := ctx.FormFile("file")
 		if err != nil {
 			ctx.StatusCode(iris.StatusInternalServerError)
 			ctx.HTML("Error while uploading: <b>" + err.Error() + "</b>")
 			return
 		}
-		_, err = uploader.Upload(&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String("test"),
-			Body:   file,
-		})
-		if err != nil {
-			// Print the error and exit.
-			fmt.Println("Unable to upload to bucket %q , %v", bucket, err)
-		}
+		fmt.Println(info)
+		// _, err = uploader.Upload(&s3manager.UploadInput{
+		// 	Bucket: aws.String(bucket),
+		// 	Key:    aws.String("test"),
+		// 	Body:   file,
+		// })
+		// if err != nil {
+		// 	// Print the error and exit.
+		// 	fmt.Println("Unable to upload to bucket %q , %v", bucket, err)
+		// }
 
 		fmt.Printf("Successfully uploaded to %q\n", bucket)
 
