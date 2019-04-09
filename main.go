@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -107,28 +106,26 @@ func main() {
 	})
 
 	app.Post("/upload", func(ctx iris.Context) {
-		fmt.Println("hit")
 		file, info, err := ctx.FormFile("file")
 		if err != nil {
 			ctx.StatusCode(iris.StatusInternalServerError)
 			ctx.HTML("Error while uploading: <b>" + err.Error() + "</b>")
 			return
 		}
-		fmt.Println(info)
 		_, err = uploader.Upload(&s3manager.UploadInput{
 			Bucket: aws.String(bucket),
-			Key:    aws.String("test"),
+			Key:    aws.String(info.Filename),
 			Body:   file,
 		})
 		if err != nil {
 			// Print the error and exit.
 			fmt.Println("Unable to upload to bucket %q , %v", bucket, err)
+			return
 		}
 
 		fmt.Printf("Successfully uploaded to %q\n", bucket)
 
 		defer file.Close()
-		fmt.Println(reflect.TypeOf(file))
 		// fmt.Println(info)
 		// defer out.Close()
 	})
