@@ -2,7 +2,6 @@ package jade
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,7 +72,7 @@ func (t *Tree) hub(token item) (n Node) {
 			return t.parseInclude(token)
 		case itemDoctype:
 			return t.newDoctype(token.pos, token.val)
-		case itemFilter:
+		case itemFilter, itemFilterText:
 			return t.parseFilter(token)
 		case itemError:
 			t.errorf("Error lex: %s line: %d\n", token.val, token.line)
@@ -84,55 +83,8 @@ func (t *Tree) hub(token item) (n Node) {
 }
 
 func (t *Tree) parseFilter(tk item) Node {
-	var subf, args, text string
-Loop:
-	for {
-		switch token := t.nextNonSpace(); token.typ {
-		case itemFilterSubf:
-			subf = token.val
-		case itemFilterArgs:
-			args = strings.Trim(token.val, " \t\r\n")
-		case itemFilterText:
-			text = strings.Trim(token.val, " \t\r\n")
-		default:
-			break Loop
-		}
-	}
-	t.backup()
-	switch tk.val {
-	case "go":
-		filterGo(subf, args, text)
-	case "markdown", "markdown-it":
-		// TODO: filterMarkdown(subf, args, text)
-	}
-	return t.newList(tk.pos) // for return nothing
-}
-
-func filterGo(subf, args, text string) {
-	switch subf {
-	case "func":
-		Go.Name = ""
-		switch args {
-		case "name":
-			Go.Name = text
-		case "arg", "args":
-			if Go.Args != "" {
-				Go.Args += ", " + strings.Trim(text, "()")
-			} else {
-				Go.Args = strings.Trim(text, "()")
-			}
-		default:
-			fn := strings.Split(text, "(")
-			if len(fn) == 2 {
-				Go.Name = strings.Trim(fn[0], " \t\n)")
-				Go.Args = strings.Trim(fn[1], " \t\n)")
-			} else {
-				log.Fatal(":go:func filter error in " + text)
-			}
-		}
-	case "import":
-		Go.Import = text
-	}
+	// TODO add golang filters
+	return t.newList(tk.pos)
 }
 
 func (t *Tree) parseTag(tk item) Node {
@@ -155,7 +107,7 @@ Loop:
 			case itemID:
 				tag.attr("id", `"`+token.val+`"`, false)
 			case itemAttrStart:
-				t.parseAttributes(tag, `"`)
+				t.parseAttributes(tag)
 			case itemTagEnd:
 				tag.tagType = itemTagVoid
 				return tag
@@ -174,7 +126,7 @@ type pAttr interface {
 	attr(string, string, bool)
 }
 
-func (t *Tree) parseAttributes(tag pAttr, qw string) {
+func (t *Tree) parseAttributes(tag pAttr) {
 	var (
 		aname string
 		equal bool
@@ -190,7 +142,7 @@ func (t *Tree) parseAttributes(tag pAttr, qw string) {
 			case aname == "":
 				aname = token.val
 			case aname != "" && !equal:
-				tag.attr(aname, qw+aname+qw, unesc)
+				tag.attr(aname, `"`+aname+`"`, unesc)
 				aname = token.val
 			case aname != "" && equal:
 				stack = append(stack, token.val)
@@ -224,7 +176,7 @@ func (t *Tree) parseAttributes(tag pAttr, qw string) {
 				aname = ""
 				stack = stack[:0]
 			case len_stack == 0 && aname != "":
-				tag.attr(aname, qw+aname+qw, unesc)
+				tag.attr(aname, `"`+aname+`"`, unesc)
 				aname = ""
 			}
 		case itemAttrEnd:
@@ -236,7 +188,7 @@ func (t *Tree) parseAttributes(tag pAttr, qw string) {
 					tag.attr(a, a, unesc)
 				}
 			case len_stack == 0 && aname != "":
-				tag.attr(aname, qw+aname+qw, unesc)
+				tag.attr(aname, `"`+aname+`"`, unesc)
 			}
 			return
 		default:
@@ -334,7 +286,7 @@ Loop:
 			mixin.append(t.hub(token))
 		case token.depth == deep:
 			if token.typ == itemAttrStart {
-				t.parseAttributes(mixin, "")
+				t.parseAttributes(mixin)
 			} else {
 				break Loop
 			}
@@ -362,7 +314,7 @@ Loop:
 			mixin.appendToBlock(t.hub(token))
 		case token.depth == deep:
 			if token.typ == itemAttrStart {
-				t.parseAttributes(mixin, "")
+				t.parseAttributes(mixin)
 			} else {
 				break Loop
 			}
@@ -440,24 +392,13 @@ func (t *Tree) parseInclude(tk item) *ListNode {
 }
 
 func (t *Tree) parseSubFile(path string) *ListNode {
-	// log.Println("subtemplate: " + path)
 	var incTree = New(path)
 	incTree.block = t.block
 	incTree.mixin = t.mixin
-	wd, _ := os.Getwd()
-
-	dir, file := filepath.Split(path)
-	if dir != "" && dir != "./" {
-		os.Chdir(dir)
-	}
-
-	_, err := incTree.Parse(t.read(file))
+	_, err := incTree.Parse(t.read(path))
 	if err != nil {
-		d, _ := os.Getwd()
-		t.errorf(`in '%s' subtemplate '%s': parseSubFile() error: %s`, d, path, err)
+		t.errorf(`%s`, err)
 	}
-
-	os.Chdir(wd)
 	return incTree.Root
 }
 
@@ -473,8 +414,7 @@ func (t *Tree) read(path string) []byte {
 	case "":
 		if _, err = os.Stat(path + ".jade"); os.IsNotExist(err) {
 			if _, err = os.Stat(path + ".pug"); os.IsNotExist(err) {
-				wd, _ := os.Getwd()
-				t.errorf("in '%s' subtemplate '%s': file path error: '.jade' or '.pug' file required", wd, path)
+				t.errorf("try " + path + `.*: ".jade" or ".pug" file required`)
 			} else {
 				ext = ".pug"
 			}
@@ -486,8 +426,8 @@ func (t *Tree) read(path string) []byte {
 		t.errorf(`file extension  %s  is not supported`, ext)
 	}
 	if err != nil {
-		wd, _ := os.Getwd()
-		t.errorf(`%s  work dir: %s `, err, wd)
+		dir, _ := os.Getwd()
+		t.errorf(`%s  work dir: %s `, err, dir)
 	}
 
 	return bb

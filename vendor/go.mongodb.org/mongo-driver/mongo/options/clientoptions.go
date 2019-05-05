@@ -4,7 +4,7 @@
 // not use this file except in compliance with the License. You may obtain
 // a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
-package options
+package options // import "go.mongodb.org/mongo-driver/mongo/options"
 
 import (
 	"bytes"
@@ -504,9 +504,6 @@ func MergeClientOptions(opts ...*ClientOptions) *ClientOptions {
 		}
 		if opt.ZlibLevel != nil {
 			c.ZlibLevel = opt.ZlibLevel
-		}
-		if opt.err != nil {
-			c.err = opt.err
 		}
 	}
 

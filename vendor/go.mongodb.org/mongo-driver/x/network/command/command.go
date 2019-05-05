@@ -4,7 +4,7 @@
 // not use this file except in compliance with the License. You may obtain
 // a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
-package command
+package command // import "go.mongodb.org/mongo-driver/x/network/command"
 
 import (
 	"errors"
@@ -213,7 +213,7 @@ func addSessionFields(cmd bsonx.Doc, desc description.SelectedServer, client *se
 		cmd = addTransaction(cmd, client)
 	}
 
-	client.ApplyCommand(desc.Server) // advance the state machine based on a command executing
+	client.ApplyCommand() // advance the state machine based on a command executing
 
 	return cmd, nil
 }

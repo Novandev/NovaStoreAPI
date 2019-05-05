@@ -7,9 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/imroc/req"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/kataras/iris"
@@ -30,10 +28,6 @@ func main() {
 	// }
 	// DB section
 	mblabsUri := os.Getenv("MONGOATLAS")
-	bucket := os.Getenv("BUCKET")
-	// fmt.Println(mblabsUri)
-	//mongoDbUname := os.Getenv("MLABSUSERNAME")
-	//mongoDbPassword := os.Getenv("MLABSPASSWORD")
 	dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
 	client, err := mongo.Connect(dbCtx, options.Client().ApplyURI(mblabsUri))
 
@@ -42,15 +36,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot connect to MLABS")
 	}
-
-	//accessKey := os.Getenv("ACCESS")
-	//secretKey := os.Getenv("SECRET")
-
-	//format := "\nAccess: %s\nSecret: %s\n"
-	//_, authErr = fmt.Printf(format, accessKey, secretKey)
-	//if authErr != nil {
-	//log.Fatal(authErr.Error())
-	//}
 
 	port := os.Getenv("PORT")
 
@@ -61,13 +46,14 @@ func main() {
 	// AWS Section
 
 	// Open an AWS session in order to get access to buckets
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1"),
-	})
-	if err != nil {
-		log.Fatal(err.Error)
-	}
-	uploader := s3manager.NewUploader(sess)
+	bucket := os.Getenv("BUCKET") // Bucket for AWS access
+	// sess, err := session.NewSession(&aws.Config{
+	// 	Region: aws.String("us-east-1"),
+	// })
+	// if err != nil {
+	// 	log.Fatal(err.Error)
+	// }
+	// uploader := s3manager.NewUploader(sess)
 
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
@@ -105,18 +91,33 @@ func main() {
 		ctx.JSON(response)
 	})
 
-	app.Post("/upload", func(ctx iris.Context) {
+	app.Post("/make-model", func(ctx iris.Context) {
 		file, info, err := ctx.FormFile("file")
+		fmt.Println(info)
+		target := ctx.URLParam("target")
+		features := ctx.URLParam("features")
+		model := ctx.URLParam("model")
 		if err != nil {
 			ctx.StatusCode(iris.StatusInternalServerError)
 			ctx.HTML("Error while uploading: <b>" + err.Error() + "</b>")
 			return
 		}
-		_, err = uploader.Upload(&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(info.Filename),
-			Body:   file,
+		s := fmt.Sprintf("http://localhost:5000/make-model?target=%s&features=%s&model=%s", target, features, model)
+		r, err := req.Post(s, req.FileUpload{
+			File:      file,
+			FieldName: "file", // FieldName is form field name
+			FileName:  info.Filename,
 		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(r)
+		// _, err = uploader.Upload(&s3manager.UploadInput{
+		// 	Bucket: aws.String(bucket),
+		// 	Key:    aws.String(info.Filename),
+		// 	Body:   file,
+		// })
 		if err != nil {
 			// Print the error and exit.
 			fmt.Println("Unable to upload to bucket %q , %v", bucket, err)
@@ -152,9 +153,10 @@ func main() {
 
 type (
 	User struct {
-		ID        bson.ObjectId `json:"id" bson:"_id,omitempty"`
-		Email     string        `json:"email"`
-		Password  string        `json:"password"`
-		CreatedAt time.Time     `json:"CreatedAt"`
+		ID         bson.ObjectId `json:"id" bson:"_id,omitempty"`
+		Email      string        `json:"email"`
+		Password   string        `json:"password"`
+		Auth_token string        `json:"auth_token"`
+		CreatedAt  time.Time     `json:"CreatedAt"`
 	}
 )

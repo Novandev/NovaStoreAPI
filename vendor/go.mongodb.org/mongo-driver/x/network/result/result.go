@@ -5,7 +5,7 @@
 // a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
 // Package result contains the results from various operations.
-package result
+package result // import "go.mongodb.org/mongo-driver/x/network/result"
 
 import (
 	"time"

@@ -530,6 +530,7 @@ func (p *Policy) validURL(rawurl string) (string, bool) {
 			urlPolicy, ok := p.allowURLSchemes[u.Scheme]
 			if !ok {
 				return "", false
+
 			}
 
 			if urlPolicy == nil || urlPolicy(u) == true {

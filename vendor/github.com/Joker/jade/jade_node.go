@@ -61,120 +61,6 @@ func (l *TagNode) ifAttrArgBollean() {
 	}
 }
 
-// `"aaa'a" + 'b\"bb"b' + 'c'` >>> `"aaa'a" + "b\"bb\"b" + "c"`
-func filterString(in string) string {
-	var (
-		rs         = []rune(in)
-		flag, prev rune
-		psn        int
-	)
-	for k, r := range rs {
-		// fmt.Println(string(r), " ", r)
-		switch r {
-		case '"':
-			if flag == '\'' && prev != '\\' {
-				rs[k] = 0 // bookmark for replace
-			}
-			if flag == 0 {
-				flag = '"'
-				psn = k
-			} else if r == flag && prev != '\\' {
-				flag = 0
-			}
-		case '\'':
-			if flag == 0 {
-				flag = '\''
-				psn = k
-			} else if r == flag && prev != '\\' {
-				// if k-(psn+1) != 1 {
-				rs[psn] = '"'
-				rs[k] = '"'
-				// }
-				flag = 0
-			}
-		case '`':
-			if flag == 0 {
-				flag = '`'
-				psn = k
-			} else if r == flag {
-				flag = 0
-			}
-		}
-		prev = r
-	}
-	filterPlus(rs)
-	filterJsEsc(rs)
-	out := strings.Replace(string(rs), string(rune(0)), `\"`, -1)
-	out = strings.Replace(out, string(rune(1)), ``, -1)
-	out = strings.Replace(out, string([]rune{2, 2}), "`+", -1)
-	out = strings.Replace(out, string(rune(3)), "+`", -1)
-	return out
-}
-
-// "aaa" +  "bbb" >>> "aaabbb"
-func filterPlus(rs []rune) {
-	var (
-		flag, prev rune
-		psn        int
-	)
-	for k, r := range rs {
-		switch r {
-		case '"':
-			if flag == 0 {
-				flag = '"'
-				if psn > 0 {
-					for i := psn; i < k+1; i++ {
-						// fmt.Println(string(rs[i]), rs[i])
-						rs[i] = 1
-					}
-				}
-			} else if r == flag && prev != '\\' {
-				psn = k
-				flag = 0
-			}
-		case '`':
-			if flag == 0 {
-				flag = '`'
-			} else if r == flag {
-				flag = 0
-			}
-		case ' ', '+':
-		default:
-			psn = 0
-		}
-		prev = r
-	}
-}
-
-// `aaa ${bbb} ccc` >>> `aaa `+bbb+` ccc`
-func filterJsEsc(rs []rune) {
-	var (
-		flag, prev rune
-		code       bool
-	)
-	for k, r := range rs {
-		switch r {
-		case '`':
-			if flag == 0 {
-				flag = '`'
-			} else if r == flag {
-				flag = 0
-			}
-		case '{':
-			if flag == '`' && prev == '$' {
-				rs[k-1] = 2
-				rs[k] = 2
-				code = true
-			}
-		case '}':
-			if flag == '`' && code {
-				rs[k] = 3
-			}
-		}
-		prev = r
-	}
-}
-
 func ifAttrArgString(a string, unesc bool) (string, bool) {
 	var (
 		str   = []rune(a)
@@ -209,7 +95,7 @@ func ifAttrArgString(a string, unesc bool) (string, bool) {
 	return "", false
 }
 
-func ternary(a string) (string, bool) {
+func query(a string) (string, bool) {
 	var (
 		re    = regexp.MustCompile(`^(.+)\?(.+):(.+)$`)
 		match = re.FindStringSubmatch(a)
@@ -220,7 +106,7 @@ func ternary(a string) (string, bool) {
 				return "", false
 			}
 		}
-		return "ternary(" + match[1] + ", " + match[2] + ", " + match[3] + ")", true
+		return "qf(" + match[1] + ", " + match[2] + ", " + match[3] + ")", true
 	}
 	return "", false
 }
@@ -239,22 +125,20 @@ func (l *TagNode) WriteIn(b io.Writer) {
 	if len(l.AttrName) > 0 {
 		fmt.Fprint(attr, tag__arg_bgn)
 		for k, name := range l.AttrName {
-			attrStr := filterString(l.AttrCode[k])
-
-			if arg, ok := ifAttrArgString(attrStr, l.AttrUesc[k]); ok {
+			if arg, ok := ifAttrArgString(l.AttrCode[k], l.AttrUesc[k]); ok {
 				fmt.Fprintf(attr, tag__arg_str, name, arg)
 
 			} else if !golang_mode {
-				fmt.Fprintf(attr, tag__arg_esc, name, attrStr)
+				fmt.Fprintf(attr, tag__arg_esc, name, l.AttrCode[k])
 
-			} else if _, err := parser.ParseExpr(attrStr); err == nil {
+			} else if _, err := parser.ParseExpr(l.AttrCode[k]); err == nil {
 				if l.AttrUesc[k] {
-					fmt.Fprintf(attr, tag__arg_une, name, l.Pos, attrStr)
+					fmt.Fprintf(attr, tag__arg_une, name, l.Pos, l.AttrCode[k])
 				} else {
-					fmt.Fprintf(attr, tag__arg_esc, name, l.Pos, attrStr)
+					fmt.Fprintf(attr, tag__arg_esc, name, l.Pos, l.AttrCode[k])
 				}
 
-			} else if arg, ok := ternary(attrStr); ok {
+			} else if arg, ok := query(l.AttrCode[k]); ok {
 				if l.AttrUesc[k] {
 					fmt.Fprintf(attr, tag__arg_une, name, l.Pos, arg)
 				} else {
@@ -262,7 +146,7 @@ func (l *TagNode) WriteIn(b io.Writer) {
 				}
 
 			} else {
-				log.Fatalln("Error tag attribute value ==> ", attrStr)
+				log.Fatalln("Error tag attribute value ==> ", l.AttrCode[k])
 			}
 		}
 		fmt.Fprint(attr, tag__arg_end)
@@ -425,30 +309,30 @@ func (t *CodeNode) WriteIn(b io.Writer) {
 	switch t.codeType {
 	case itemCodeBuffered:
 		if !golang_mode {
-			fmt.Fprintf(b, code__buffered, filterString(string(t.Code)))
+			fmt.Fprintf(b, code__buffered, t.Code)
 			return
 		}
 		if code, ok := ifAttrArgString(string(t.Code), false); ok {
 			fmt.Fprintf(b, code__buffered, t.Pos, `"`+code+`"`)
 		} else {
-			fmt.Fprintf(b, code__buffered, t.Pos, filterString(string(t.Code)))
+			fmt.Fprintf(b, code__buffered, t.Pos, t.Code)
 		}
 	case itemCodeUnescaped:
 		if !golang_mode {
-			fmt.Fprintf(b, code__unescaped, filterString(string(t.Code)))
+			fmt.Fprintf(b, code__unescaped, t.Code)
 			return
 		}
-		fmt.Fprintf(b, code__unescaped, t.Pos, filterString(string(t.Code)))
+		fmt.Fprintf(b, code__unescaped, t.Pos, t.Code)
 	case itemCode:
-		fmt.Fprintf(b, code__longcode, filterString(string(t.Code)))
+		fmt.Fprintf(b, code__longcode, t.Code)
 	case itemElse:
 		fmt.Fprintf(b, code__else)
 	case itemElseIf:
-		fmt.Fprintf(b, code__else_if, filterString(string(t.Code)))
+		fmt.Fprintf(b, code__else_if, t.Code)
 	case itemForElse:
 		fmt.Fprintf(b, code__for_else)
 	case itemCaseWhen:
-		fmt.Fprintf(b, code__case_when, filterString(string(t.Code)))
+		fmt.Fprintf(b, code__case_when, t.Code)
 	case itemCaseDefault:
 		fmt.Fprintf(b, code__case_def)
 	case itemMixinBlock:
@@ -598,13 +482,11 @@ func (l *MixinNode) WriteIn(b io.Writer) {
 	if an > 0 {
 		fmt.Fprintf(attr, mixin__var_bgn)
 		if rest > 0 {
-			// TODO
-			// fmt.Println("-------- ", mixin__var_rest, l.AttrName[an-1], l.AttrRest)
 			fmt.Fprintf(attr, mixin__var_rest, strings.TrimLeft(l.AttrName[an-1], "."), l.AttrRest)
 			l.AttrName = l.AttrName[:an-1]
 		}
 		for k, name := range l.AttrName {
-			fmt.Fprintf(attr, mixin__var, name, filterString(l.AttrCode[k]))
+			fmt.Fprintf(attr, mixin__var, name, l.AttrCode[k])
 		}
 		fmt.Fprintf(attr, mixin__var_end)
 	}

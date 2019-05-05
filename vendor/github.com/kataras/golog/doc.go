@@ -391,7 +391,7 @@ Examples:
 	https://github.com/kataras/golog/tree/master/_examples
 
 */
-package golog
+package golog // import "github.com/kataras/golog"
 
 // Version is the version string representation of the "golog" package.
 const Version = "0.0.8"

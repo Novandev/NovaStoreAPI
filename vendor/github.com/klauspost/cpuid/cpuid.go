@@ -26,7 +26,6 @@ const (
 	MSVM // Microsoft Hyper-V or Windows Virtual PC
 	VMware
 	XenHVM
-	Bhyve
 )
 
 const (
@@ -528,7 +527,7 @@ func (c CPUInfo) LogicalCPU() int {
 // have many false negatives.
 func (c CPUInfo) VM() bool {
 	switch c.VendorID {
-	case MSVM, KVM, VMware, XenHVM, Bhyve:
+	case MSVM, KVM, VMware, XenHVM:
 		return true
 	}
 	return false
@@ -671,7 +670,6 @@ var vendorMapping = map[string]Vendor{
 	"Microsoft Hv": MSVM,
 	"VMwareVMware": VMware,
 	"XenVMMXenVMM": XenHVM,
-	"bhyve bhyve ": Bhyve,
 }
 
 func vendorID() Vendor {

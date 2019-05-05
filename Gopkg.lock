@@ -82,6 +82,14 @@
   revision = "2a8bb927dd31d8daada140a5d09578521ce5c36a"
 
 [[projects]]
+  digest = "1:3fb51807ab996acf337a6372ac98e093e17f14d75edbf2c0d27f650e53d90fac"
+  name = "github.com/imroc/req"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b355b6f6842fbda1bee879f2846cb79424cad4de"
+  version = "v0.2.3"
+
+[[projects]]
   digest = "1:8a2a940fd81980cd5394dbb60a8f9ab49b5d8195e52cddec562b9a40eab394f0"
   name = "github.com/iris-contrib/blackfriday"
   packages = ["."]
@@ -107,9 +115,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3c4a622f11164d31a986a58fb5dbb31cab4c8b745d3feab0ff8f8daf7661b5b6"
+  digest = "1:f7414c2ee38cf7b237d8d671236126db4c528ddd409d5b60aba03b92a6382f5d"
   name = "github.com/joho/godotenv"
-  packages = ["."]
+  packages = [
+    ".",
+    "autoload",
+  ]
   pruneopts = "UT"
   revision = "5c0e6c6ab1a0a9ef0a8822cba3a05d62f7dad941"
 
@@ -380,7 +391,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/imroc/req",
     "github.com/joho/godotenv",
+    "github.com/joho/godotenv/autoload",
     "github.com/kataras/iris",
     "github.com/kataras/iris/middleware/logger",
     "github.com/kataras/iris/middleware/recover",
