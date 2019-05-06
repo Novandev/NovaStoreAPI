@@ -55,3 +55,15 @@
 [[constraint]]
   name = "github.com/imroc/req"
   version = "0.2.3"
+
+[[constraint]]
+  name = "github.com/dgrijalva/jwt-go"
+  version = "3.2.0"
+
+[[constraint]]
+  name = "github.com/google/uuid"
+  version = "1.1.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/nu7hatch/gouuid"
