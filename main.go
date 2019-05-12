@@ -110,6 +110,7 @@ func main() {
 		}
 
 		res, err := UserCollection.Find(dbCtx, bson.M{"email": u.Email, "password": u.Password})
+		fmt.Println(res)
 		if err != nil {
 			ctx.WriteString(err.Error())
 			ctx.StatusCode(iris.StatusUnauthorized)
