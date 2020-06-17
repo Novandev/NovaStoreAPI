@@ -12,4 +12,4 @@ This is the portion that the command line connects to that authenticates and run
 
 ## Novastore Command Line Utitlity
 
-The user facing side of the system. This portion acceps user inputs in the form of commans and users login to see their current stored models/states improve their models
+The user facing side of the system. This portion acceps user inputs in the form of commands and users login to see their current stored models/states improve their models

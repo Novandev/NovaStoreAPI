@@ -143,18 +143,7 @@ func main() {
 		}
 
 		fmt.Println(r)
-		// _, err = uploader.Upload(&s3manager.UploadInput{
-		// 	Bucket: aws.String(bucket),
-		// 	Key:    aws.String(info.Filename),
-		// 	Body:   file,
-		// })
-		if err != nil {
-			// Print the error and exit.
-			fmt.Println("Unable to upload to bucket %q , %v", bucket, err)
-			return
-		}
-
-		fmt.Printf("Successfully uploaded to %q\n", bucket)
+	
 
 		defer file.Close()
 		// fmt.Println(info)

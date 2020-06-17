@@ -1,5 +1,5 @@
 # Nova Store API
-This utility enables users to uplad and view statistical data and estart predictive services (in the future)
+This utility enables users to uplad and view statistical data and start predictive services (in the future)
 ### Prerequisites
 Please ensure that golang is installed on your system
 
