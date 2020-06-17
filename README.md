@@ -16,8 +16,9 @@ To install novastore api️ execute this  following command
 ## Built With
 
 * [GORM](https://github.com/jinzhu/gorm) - Object Relational Mapper (With the use of an SQLite Database)
-* [RowtoJsonAPI](https://github.com/Novandev/RowToJsonApi)
+* [RowtoJsonAPI](https://github.com/Novandev/RowToJsonApi) - Statistical analysis api
 * [GODOTENV](https://github.com/joho/godotenv) - Used to store secrets such as Twillio authentication credentials and source number
+* [Kloudless](https://kloudless.com) - Kloudless API for interfacing with storage apis
 
 
 
