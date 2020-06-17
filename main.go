@@ -49,7 +49,7 @@ func main() {
 	// AWS Section
 
 	// Open an AWS session in order to get access to buckets
-	bucket := os.Getenv("BUCKET") // Bucket for AWS access
+	// bucket := os.Getenv("BUCKET") // Bucket for AWS access
 	// sess, err := session.NewSession(&aws.Config{
 	// 	Region: aws.String("us-east-1"),
 	// })
