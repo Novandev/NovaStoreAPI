@@ -27,7 +27,7 @@ To install novastore api️ execute this  following command
 
 ## Authors
 
-* **Novan Adamsl** - *Javascript/Golang Developer and Data Scientist* - [LinkedIn](https://www.linkedin.com/in/novan-adams/)
+* **Novan Adamsl** - *Developer and Machine learning anf statistics* - [LinkedIn](https://www.linkedin.com/in/novan-adams/)
 
 ## License
 
