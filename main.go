@@ -46,17 +46,7 @@ func main() {
 		log.Fatal("$PORT must be set")
 	}
 
-	// AWS Section
 
-	// Open an AWS session in order to get access to buckets
-	// bucket := os.Getenv("BUCKET") // Bucket for AWS access
-	// sess, err := session.NewSession(&aws.Config{
-	// 	Region: aws.String("us-east-1"),
-	// })
-	// if err != nil {
-	// 	log.Fatal(err.Error)
-	// }
-	// uploader := s3manager.NewUploader(sess)
 
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
@@ -146,8 +136,8 @@ func main() {
 	
 
 		defer file.Close()
-		// fmt.Println(info)
-		// defer out.Close()
+
+		
 		return
 	})
 
