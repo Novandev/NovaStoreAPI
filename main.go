@@ -30,11 +30,19 @@ func main() {
 	// 	log.Fatal("Error loading .env file")
 	// }
 	// DB section
-	mblabsUri := os.Getenv("MONGOATLAS")
-	dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
-	client, err := mongo.Connect(dbCtx, options.Client().ApplyURI(mblabsUri))
+	mblabsURI := os.Getenv("MONGOATLAS")
+	// dbCtx, _ := context.WithTimeout(context.Background(), 100000*time.Second)
+	// client, err := mongo.Connect(dbCtx, options.Client().ApplyURI(mblabsURI))
 
-	UserCollection := client.Database("novastoretest").Collection("Users")
+	dbCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(dbCtx, options.Client().ApplyURI(
+		mblabsURI))
+	if err != nil {
+		log.Fatal(err)
+	}
+	novastoredb := client.Database("novastoredb")
+	UserCollection := novastoredb.Collection("Users")
 
 	if err != nil {
 		log.Fatal("Cannot connect to MLABS")
@@ -45,8 +53,6 @@ func main() {
 	if port == "" {
 		log.Fatal("$PORT must be set")
 	}
-
-
 
 	app := iris.Default()
 	app.Logger().SetLevel("debug")
@@ -76,14 +82,16 @@ func main() {
 		u.NewId()
 		_, resErr := UserCollection.InsertOne(dbCtx, u)
 		if resErr != nil {
-			panic(resErr)
+
 			ctx.WriteString(err.Error())
 			ctx.StatusCode(iris.StatusBadRequest)
 
+			panic(resErr)
+
 			return
 		}
-		//ctx.Application().Logger().Infof("received %#+v", u.Email)
-		//ctx.Application().Logger().Infof("received %#+v", id)
+		ctx.Application().Logger().Infof("received %#+v", u.Email)
+		ctx.Application().Logger().Infof("received %#+v", u)
 		response := map[string]string{"Status": "200", "Email Registered": u.Email, "Auth_token": u.Auth_token, "ID": u.ID}
 		ctx.JSON(response)
 	})
@@ -133,11 +141,9 @@ func main() {
 		}
 
 		fmt.Println(r)
-	
 
 		defer file.Close()
 
-		
 		return
 	})
 
